@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ICS Rail Testbed — Capstone Slideshow</title>
+  <style>
+    :root {
+      --bg: #111214;
+      --surface: #1b1d21;
+      --surface-hover: #262930;
+      --border: #2e323a;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #c1272d;
+      --accent-hover: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .title span {
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: #4b5563;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .counter {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-width: 64px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .slide-frame {
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide-frame img {
+      max-width: 100%;
+      max-height: calc(100vh - 110px);
+      width: auto;
+      height: auto;
+      border-radius: 6px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      background: #fff;
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 64px;
+      border-radius: 8px;
+      background: rgba(27, 29, 33, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.65;
+      transition: opacity 0.15s, background 0.15s;
+      z-index: 5;
+    }
+
+    .nav-arrow:hover:not(:disabled) {
+      opacity: 1;
+      background: rgba(193, 39, 45, 0.9);
+    }
+
+    .nav-prev { left: 16px; }
+    .nav-next { right: 16px; }
+
+    /* Grid Overview Modal */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 11, 13, 0.94);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .grid-overlay.open { display: flex; }
+
+    .grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .grid-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .grid-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.12s;
+    }
+
+    .grid-card:hover {
+      transform: translateY(-2px);
+      border-color: #6b7280;
+    }
+
+    .grid-card.active {
+      border-color: var(--accent);
+    }
+
+    .grid-card img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .grid-card .label {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 6px 18px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 640px) {
+      .nav-arrow { width: 36px; height: 48px; font-size: 1.1rem; }
+      footer { display: none; }
+      .title { font-size: 0.82rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title"><span>■</span>ICS Rail Testbed — Capstone Presentation</div>
+    <div class="controls">
+      <button id="prevBtn" title="Previous (Left Arrow)">← Prev</button>
+      <span class="counter" id="counter">1 / 41</span>
+      <button id="nextBtn" title="Next (Right Arrow / Space)">Next →</button>
+      <button id="gridBtn" title="All Slides (G)">Grid</button>
+      <button id="fsBtn" class="primary" title="Fullscreen (F)">Fullscreen</button>
+    </div>
+  </header>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <main id="stage">
+    <button class="nav-arrow nav-prev" id="stagePrev" aria-label="Previous slide">‹</button>
+    <div class="slide-frame">
+      <img id="slideImg" src="slides/slide_01.jpg" alt="Slide 1" />
+    </div>
+    <button class="nav-arrow nav-next" id="stageNext" aria-label="Next slide">›</button>
+  </main>
+
+  <footer>
+    <span>Shortcuts: ← / → or Space to navigate · G for slide grid · F for fullscreen</span>
+    <span>UIW Engineering Senior Design</span>
+  </footer>
+
+  <div class="grid-overlay" id="gridOverlay">
+    <div class="grid-header">
+      <strong>All Slides (41)</strong>
+      <button id="closeGridBtn">Close (Esc)</button>
+    </div>
+    <div class="grid-items" id="gridItems"></div>
+  </div>
+
+  <script>
+    const TOTAL_SLIDES = 41;
+    let current = 1;
+
+    const slideImg = document.getElementById("slideImg");
+    const counter = document.getElementById("counter");
+    const progressFill = document.getElementById("progressFill");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const stagePrev = document.getElementById("stagePrev");
+    const stageNext = document.getElementById("stageNext");
+    const gridBtn = document.getElementById("gridBtn");
+    const closeGridBtn = document.getElementById("closeGridBtn");
+    const gridOverlay = document.getElementById("gridOverlay");
+    const gridItems = document.getElementById("gridItems");
+    const fsBtn = document.getElementById("fsBtn");
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function slideSrc(n) {
+      return `slides/slide_${pad(n)}.jpg`;
+    }
+
+    function goTo(n) {
+      current = Math.max(1, Math.min(TOTAL_SLIDES, n));
+      slideImg.src = slideSrc(current);
+      slideImg.alt = `Slide ${current}`;
+      counter.textContent = `${current} / ${TOTAL_SLIDES}`;
+      progressFill.style.width = `${(current / TOTAL_SLIDES) * 100}%`;
+
+      prevBtn.disabled = stagePrev.disabled = current === 1;
+      nextBtn.disabled = stageNext.disabled = current === TOTAL_SLIDES;
+
+      history.replaceState(null, "", `#slide=${current}`);
+
+      // Preload adjacent slides
+      if (current < TOTAL_SLIDES) new Image().src = slideSrc(current + 1);
+      if (current > 1) new Image().src = slideSrc(current - 1);
+
+      document.querySelectorAll(".grid-card").forEach((el, idx) => {
+        el.classList.toggle("active", idx + 1 === current);
+      });
+    }
+
+    function buildGrid() {
+      const frag = document.createDocumentFragment();
+      for (let i = 1; i <= TOTAL_SLIDES; i++) {
+        const card = document.createElement("div");
+        card.className = "grid-card" + (i === current ? " active" : "");
+        card.innerHTML = `<img loading="lazy" src="${slideSrc(i)}" alt="Slide ${i}" /><div class="label">Slide ${i}</div>`;
+        card.addEventListener("click", () => {
+          goTo(i);
+          gridOverlay.classList.remove("open");
+        });
+        frag.appendChild(card);
+      }
+      gridItems.appendChild(frag);
+    }
+
+    prevBtn.addEventListener("click", () => goTo(current - 1));
+    stagePrev.addEventListener("click", () => goTo(current - 1));
+    nextBtn.addEventListener("click", () => goTo(current + 1));
+    stageNext.addEventListener("click", () => goTo(current + 1));
+
+    gridBtn.addEventListener("click", () => gridOverlay.classList.toggle("open"));
+    closeGridBtn.addEventListener("click", () => gridOverlay.classList.remove("open"));
+
+    fsBtn.addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        gridOverlay.classList.remove("open");
+        return;
+      }
+      if (gridOverlay.classList.contains("open")) return;
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+        e.preventDefault();
+        goTo(current + 1);
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        goTo(current - 1);
+      } else if (e.key === "Home") {
+        goTo(1);
+      } else if (e.key === "End") {
+        goTo(TOTAL_SLIDES);
+      } else if (e.key.toLowerCase() === "g") {
+        gridOverlay.classList.toggle("open");
+      } else if (e.key.toLowerCase() === "f") {
+        fsBtn.click();
+      }
+    });
+
+    // Touch swipe support
+    let touchStartX = null;
+    document.getElementById("stage").addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    document.getElementById("stage").addEventListener("touchend", (e) => {
+      if (touchStartX === null) return;
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(dx) > 45) {
+        goTo(dx < 0 ? current + 1 : current - 1);
+      }
+      touchStartX = null;
+    }, { passive: true });
+
+    // Initialize from URL hash if present
+    const match = location.hash.match(/slide=(\d+)/);
+    if (match) current = Math.max(1, Math.min(TOTAL_SLIDES, parseInt(match[1], 10)));
+    buildGrid();
+    goTo(current);
+  </script>
+</body>
+</html>
